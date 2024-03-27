@@ -3,4 +3,32 @@ $x = 10;
 $y = 20;
 $sum = $x + $y;
 echo "The sum is: " . $sum;
+
+
+// Функция для проверки, является ли число простым
+function isPrime($num) {
+    if ($num <= 1) {
+        return false;
+    }
+    for ($i = 2; $i <= sqrt($num); $i++) {
+        if ($num % $i == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Функция для вычисления факториала числа
+function factorial($n) {
+    if ($n <= 1) {
+        return 1;
+    } else {
+        return $n * factorial($n - 1);
+    }
+}
+
+echo "\nFunction calls:\n";
+echo "Factorial of $x: " . factorial($x) . "\n";
+echo "Is $x prime? " . (isPrime($x) ? 'Yes' : 'No') . "\n";
+
 ?>

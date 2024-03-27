@@ -255,6 +255,240 @@ class LexicalAnalyzer:
 
         return output_sequence, tokens
 
+    def debug_analyze_php(self, input_sequence):
+        tokens = {'W': {}, 'I': {}, 'O': {}, 'R': {}, 'N': {}, 'C': {}}
+
+        for keyword in self.php_elements['keywords'].values():
+            self.check(tokens, 'W', keyword)
+        for operation in self.php_elements['operations'].values():
+            self.check(tokens, 'O', operation)
+        for delimiter in self.php_elements['delimiters'].values():
+            self.check(tokens, 'R', delimiter)
+        for constant in self.php_elements['constants'].values():
+            self.check(tokens, 'C', constant)
+
+        i = 0
+        state = 'S'
+        output_sequence = buffer = ''
+        line = pos = 0
+
+        while i < len(input_sequence):
+            symbol = input_sequence[i]
+            operation = self.get_operation(input_sequence, i)
+            separator = self.get_separator(input_sequence, i)
+
+            yield {'type': 'transition', 'line': line, 'pos': pos}
+
+            if state == 'S':
+                buffer = ''
+                if symbol.isalpha() or symbol == '_':
+                    state = 'q1'
+                    buffer += symbol
+                elif symbol.isdigit():
+                    state = 'q3'
+                    buffer += symbol
+                elif symbol == "'":
+                    state = 'q9'
+                    buffer += symbol
+                elif symbol == '"':
+                    state = 'q10'
+                    buffer += symbol
+                elif symbol == '/':
+                    state = 'q11'
+                elif operation:
+                    self.check(tokens, 'O', operation)
+                    yield {'type': 'output', 'token': tokens['O'][operation]}
+                    yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
+                    i += len(operation) - 1
+                elif separator:
+                    if separator != ' ':
+                        self.check(tokens, 'R', separator)
+                        yield {'type': 'output', 'token': tokens['R'][separator]}
+                        yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
+                        if separator == '\n':
+                            line += 1
+                            pos = 0
+                        else:
+                            pos += 1
+                elif i == len(input_sequence) - 1:
+                    state = 'Z'
+            elif state == 'q1':
+                if symbol.isalnum() or symbol == '_':
+                    buffer += symbol
+                else:
+                    if operation or separator:
+                        if buffer in self.php_elements['keywords'].values():
+                            yield {'type': 'output', 'token': tokens['W'][buffer]}
+                            yield {'type': 'lexeme', 'token_class': 'W', 'lexeme': buffer}
+                        elif buffer in self.php_elements['constants'].values():
+                            yield {'type': 'output', 'token': tokens['C'][buffer]}
+                            yield {'type': 'lexeme', 'token_class': 'C', 'lexeme': buffer}
+                        else:
+                            self.check(tokens, 'I', buffer)
+                            yield {'type': 'output', 'token': tokens['I'][buffer]}
+                            yield {'type': 'lexeme', 'token_class': 'I', 'lexeme': buffer}
+                        if operation:
+                            self.check(tokens, 'O', operation)
+                            yield {'type': 'output', 'token': tokens['O'][operation]}
+                            yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
+                            i += len(operation) - 1
+                        if separator:
+                            if separator != ' ':
+                                self.check(tokens, 'R', separator)
+                                yield {'type': 'output', 'token': tokens['R'][separator]}
+                                yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
+                                if separator == '\n':
+                                    line += 1
+                                    pos = 0
+                                else:
+                                    pos += 1
+                    state = 'S'
+            elif state == 'q3':
+                if symbol.isdigit():
+                    buffer += symbol
+                elif symbol == '.':
+                    state = 'q4'
+                    buffer += symbol
+                elif symbol == 'e' or symbol == 'E':
+                    state = 'q6'
+                    buffer += symbol
+                else:
+                    if operation or separator:
+                        self.check(tokens, 'N', buffer)
+                        yield {'type': 'output', 'token': tokens['N'][buffer]}
+                        yield {'type': 'lexeme', 'token_class': 'N', 'lexeme': buffer}
+                        if operation:
+                            self.check(tokens, 'O', operation)
+                            yield {'type': 'output', 'token': tokens['O'][operation]}
+                            yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
+                            i += len(operation) - 1
+                        if separator:
+                            if separator != ' ':
+                                self.check(tokens, 'R', separator)
+                                yield {'type': 'output', 'token': tokens['R'][separator]}
+                                yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
+                                if separator == '\n':
+                                    line += 1
+                                    pos = 0
+                                else:
+                                    pos += 1
+                        state = 'S'
+            elif state == 'q4':
+                if symbol.isdigit():
+                    state = 'q5'
+                    buffer += symbol
+            elif state == 'q5':
+                if symbol.isdigit():
+                    buffer += symbol
+                elif symbol == 'e' or symbol == 'E':
+                    state = 'q6'
+                    buffer += symbol
+                else:
+                    if operation or separator:
+                        self.check(tokens, 'N', buffer)
+                        yield {'type': 'output', 'token': tokens['N'][buffer]}
+                        yield {'type': 'lexeme', 'token_class': 'N', 'lexeme': buffer}
+                        if operation:
+                            self.check(tokens, 'O', operation)
+                            yield {'type': 'output', 'token': tokens['O'][operation]}
+                            yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
+                            i += len(operation) - 1
+                        if separator:
+                            if separator != ' ':
+                                self.check(tokens, 'R', separator)
+                                yield {'type': 'output', 'token': tokens['R'][separator]}
+                                yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
+                                if separator == '\n':
+                                    line += 1
+                                    pos = 0
+                                else:
+                                    pos += 1
+                        state = 'S'
+            elif state == 'q6':
+                if symbol == '-' or symbol == '+':
+                    state = 'q7'
+                    buffer += symbol
+                elif symbol.isdigit():
+                    state = 'q8'
+                    buffer += symbol
+            elif state == 'q7':
+                if symbol.isdigit():
+                    state = 'q8'
+                    buffer += symbol
+            elif state == 'q8':
+                if symbol.isdigit():
+                    buffer += symbol
+                else:
+                    if operation or separator:
+                        self.check(tokens, 'N', buffer)
+                        yield {'type': 'output', 'token': tokens['N'][buffer]}
+                        yield {'type': 'lexeme', 'token_class': 'N', 'lexeme': buffer}
+                        if operation:
+                            self.check(tokens, 'O', operation)
+                            yield {'type': 'output', 'token': tokens['O'][operation]}
+                            yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
+                            i += len(operation) - 1
+                        if separator:
+                            if separator != ' ':
+                                self.check(tokens, 'R', separator)
+                                yield {'type': 'output', 'token': tokens['R'][separator]}
+                                yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
+                                if separator == '\n':
+                                    line += 1
+                                    pos = 0
+                                else:
+                                    pos += 1
+                    state = 'S'
+            elif state == 'q9':
+                if symbol != "'":
+                    buffer += symbol
+                elif symbol == "'":
+                    buffer += symbol
+                    self.check(tokens, 'C', buffer)
+                    yield {'type': 'output', 'token': tokens['C'][buffer]}
+                    yield {'type': 'lexeme', 'token_class': 'C', 'lexeme': buffer}
+                    state = 'S'
+            elif state == 'q10':
+                if symbol != '"':
+                    buffer += symbol
+                elif symbol == '"':
+                    buffer += symbol
+                    self.check(tokens, 'C', buffer)
+                    yield {'type': 'output', 'token': tokens['C'][buffer]}
+                    yield {'type': 'lexeme', 'token_class': 'C', 'lexeme': buffer}
+                    state = 'S'
+            elif state == 'q11':
+                if symbol == '/':
+                    state = 'q12'
+                elif symbol == '*':
+                    state = 'q13'
+                else:
+                    self.check(tokens, 'O', '/')
+                    yield {'type': 'output', 'token': tokens['O']['/']}
+                    yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': '/'}
+                    state = 'S'
+                    i -= 1
+            elif state == 'q12':
+                if symbol == '\n':
+                    state = 'S'
+                    line += 1
+                    pos = 0
+                elif i == len(input_sequence) - 1:
+                    state = 'Z'
+            elif state == 'q13':
+                if symbol == '*':
+                    state = 'q14'
+                elif i == len(input_sequence) - 1:
+                    state = 'Z'
+            elif state == 'q14':
+                if symbol == '/':
+                    state = 'S'
+                elif symbol == '*':
+                    pass
+                else:
+                    state = 'q13'
+            i += 1
+            pos += 1
 
     def analyze_file(self, file_path):
         with open(file_path, 'r') as file:

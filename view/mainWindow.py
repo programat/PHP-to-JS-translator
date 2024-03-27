@@ -10,6 +10,7 @@ class PHPAnalyzerGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.analyzer = LexicalAnalyzer()
 
     def initUI(self):
         self.setWindowTitle('PHP Lexical Analyzer')
@@ -82,7 +83,7 @@ class PHPAnalyzerGUI(QMainWindow):
 
     def openFile(self):
         fileName, _ = QFileDialog.getOpenFileName(self, 'Open File', '',
-                                                  'PHP Files (*.php);;Text Files (*.txt)')
+                                                  'Text Files (*.txt);;PHP Files (*.php)')
         if fileName:
             with open(fileName, 'r') as file:
                 self.codeEditor.setPlainText(file.read())
@@ -92,8 +93,7 @@ class PHPAnalyzerGUI(QMainWindow):
         php_code = self.codeEditor.toPlainText()
 
         # 2. Выполняем лексический анализ
-        analyzer = LexicalAnalyzer()
-        output_sequence, tokens = analyzer.analyze_php(php_code)
+        output_sequence, tokens = self.analyzer.analyze_php(php_code)
 
         # 3. Выводим последовательность токенов
         self.tokensEditor.setPlainText(output_sequence)
@@ -123,11 +123,12 @@ class PHPAnalyzerGUI(QMainWindow):
 
     def debugAnalysis(self):
         php_code = self.codeEditor.toPlainText()
-        self.analyzer = LexicalAnalyzer()
-        self.output_sequence, self.tokens, self.debug_generator = self.analyzer.analyze_php(php_code, debug=True)
-
-        self.current_line = 1
-        self.current_pos = 1
+        analyzer = LexicalAnalyzer()
+        self.debug_generator = analyzer.debug_analyze_php(php_code)
+        self.current_line = 0
+        self.current_pos = 0
+        self.output_sequence = ''
+        self.tokens = {'W': {}, 'I': {}, 'O': {}, 'R': {}, 'N': {}, 'C': {}}
 
         self.debugButton.setEnabled(False)
         self.runButton.setEnabled(False)
