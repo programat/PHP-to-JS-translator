@@ -8,7 +8,7 @@ class LexicalAnalyzer:
                 10: '+=', 11: '-=', 12: '*=', 13: '/=', 14: '%=', 15: '**=', 16: '.=',
                 17: '==', 18: '!=', 19: '>', 20: '<', 21: '>=', 22: '<=', 23: '&&', 24: '||',
                 25: '!', 26: '&', 27: '|', 28: '^', 29: '~', 30: '<<', 31: '>>', 32: '<=>',
-                33: '?:', 34: '??', 35: 'and', 36: 'xor', 37: 'or'
+                33: '?:', 34: '??', 35: 'and', 36: 'xor', 37: 'or', 38: '<?', 39: '?>', 40: '<?=', 41: '?>='
             },
             'delimiters': {
                 1: ' ', 2: '(', 3: ')', 4: ',', 5: '"', 6: "'", 7: '[', 8: ']', 9: '{',
@@ -297,13 +297,13 @@ class LexicalAnalyzer:
                     state = 'q11'
                 elif operation:
                     self.check(tokens, 'O', operation)
-                    yield {'type': 'output', 'token': tokens['O'][operation]}
+                    yield {'type': 'output', 'token': tokens['O'][operation], 'lexeme': operation}
                     yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
                     i += len(operation) - 1
                 elif separator:
                     if separator != ' ':
                         self.check(tokens, 'R', separator)
-                        yield {'type': 'output', 'token': tokens['R'][separator]}
+                        yield {'type': 'output', 'token': tokens['R'][separator], 'lexeme': separator}
                         yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
                         if separator == '\n':
                             line += 1
@@ -318,24 +318,24 @@ class LexicalAnalyzer:
                 else:
                     if operation or separator:
                         if buffer in self.php_elements['keywords'].values():
-                            yield {'type': 'output', 'token': tokens['W'][buffer]}
+                            yield {'type': 'output', 'token': tokens['W'][buffer], 'lexeme': buffer}
                             yield {'type': 'lexeme', 'token_class': 'W', 'lexeme': buffer}
                         elif buffer in self.php_elements['constants'].values():
-                            yield {'type': 'output', 'token': tokens['C'][buffer]}
+                            yield {'type': 'output', 'token': tokens['C'][buffer], 'lexeme': buffer}
                             yield {'type': 'lexeme', 'token_class': 'C', 'lexeme': buffer}
                         else:
                             self.check(tokens, 'I', buffer)
-                            yield {'type': 'output', 'token': tokens['I'][buffer]}
+                            yield {'type': 'output', 'token': tokens['I'][buffer], 'lexeme': buffer}
                             yield {'type': 'lexeme', 'token_class': 'I', 'lexeme': buffer}
                         if operation:
                             self.check(tokens, 'O', operation)
-                            yield {'type': 'output', 'token': tokens['O'][operation]}
+                            yield {'type': 'output', 'token': tokens['O'][operation], 'lexeme': operation}
                             yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
                             i += len(operation) - 1
                         if separator:
                             if separator != ' ':
                                 self.check(tokens, 'R', separator)
-                                yield {'type': 'output', 'token': tokens['R'][separator]}
+                                yield {'type': 'output', 'token': tokens['R'][separator], 'lexeme': separator}
                                 yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
                                 if separator == '\n':
                                     line += 1
@@ -355,17 +355,17 @@ class LexicalAnalyzer:
                 else:
                     if operation or separator:
                         self.check(tokens, 'N', buffer)
-                        yield {'type': 'output', 'token': tokens['N'][buffer]}
+                        yield {'type': 'output', 'token': tokens['N'][buffer], 'lexeme': buffer}
                         yield {'type': 'lexeme', 'token_class': 'N', 'lexeme': buffer}
                         if operation:
                             self.check(tokens, 'O', operation)
-                            yield {'type': 'output', 'token': tokens['O'][operation]}
+                            yield {'type': 'output', 'token': tokens['O'][operation], 'lexeme': operation}
                             yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
                             i += len(operation) - 1
                         if separator:
                             if separator != ' ':
                                 self.check(tokens, 'R', separator)
-                                yield {'type': 'output', 'token': tokens['R'][separator]}
+                                yield {'type': 'output', 'token': tokens['R'][separator], 'lexeme': separator}
                                 yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
                                 if separator == '\n':
                                     line += 1
@@ -386,17 +386,17 @@ class LexicalAnalyzer:
                 else:
                     if operation or separator:
                         self.check(tokens, 'N', buffer)
-                        yield {'type': 'output', 'token': tokens['N'][buffer]}
+                        yield {'type': 'output', 'token': tokens['N'][buffer], 'lexeme': buffer}
                         yield {'type': 'lexeme', 'token_class': 'N', 'lexeme': buffer}
                         if operation:
                             self.check(tokens, 'O', operation)
-                            yield {'type': 'output', 'token': tokens['O'][operation]}
+                            yield {'type': 'output', 'token': tokens['O'][operation], 'lexeme': operation}
                             yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
                             i += len(operation) - 1
                         if separator:
                             if separator != ' ':
                                 self.check(tokens, 'R', separator)
-                                yield {'type': 'output', 'token': tokens['R'][separator]}
+                                yield {'type': 'output', 'token': tokens['R'][separator], 'lexeme': separator}
                                 yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
                                 if separator == '\n':
                                     line += 1
@@ -421,17 +421,17 @@ class LexicalAnalyzer:
                 else:
                     if operation or separator:
                         self.check(tokens, 'N', buffer)
-                        yield {'type': 'output', 'token': tokens['N'][buffer]}
+                        yield {'type': 'output', 'token': tokens['N'][buffer], 'lexeme': buffer}
                         yield {'type': 'lexeme', 'token_class': 'N', 'lexeme': buffer}
                         if operation:
                             self.check(tokens, 'O', operation)
-                            yield {'type': 'output', 'token': tokens['O'][operation]}
+                            yield {'type': 'output', 'token': tokens['O'][operation], 'lexeme': operation}
                             yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': operation}
                             i += len(operation) - 1
                         if separator:
                             if separator != ' ':
                                 self.check(tokens, 'R', separator)
-                                yield {'type': 'output', 'token': tokens['R'][separator]}
+                                yield {'type': 'output', 'token': tokens['R'][separator], 'lexeme': separator}
                                 yield {'type': 'lexeme', 'token_class': 'R', 'lexeme': separator}
                                 if separator == '\n':
                                     line += 1
@@ -445,7 +445,7 @@ class LexicalAnalyzer:
                 elif symbol == "'":
                     buffer += symbol
                     self.check(tokens, 'C', buffer)
-                    yield {'type': 'output', 'token': tokens['C'][buffer]}
+                    yield {'type': 'output', 'token': tokens['C'][buffer], 'lexeme': buffer}
                     yield {'type': 'lexeme', 'token_class': 'C', 'lexeme': buffer}
                     state = 'S'
             elif state == 'q10':
@@ -454,7 +454,7 @@ class LexicalAnalyzer:
                 elif symbol == '"':
                     buffer += symbol
                     self.check(tokens, 'C', buffer)
-                    yield {'type': 'output', 'token': tokens['C'][buffer]}
+                    yield {'type': 'output', 'token': tokens['C'][buffer], 'lexeme': buffer}
                     yield {'type': 'lexeme', 'token_class': 'C', 'lexeme': buffer}
                     state = 'S'
             elif state == 'q11':
@@ -464,7 +464,7 @@ class LexicalAnalyzer:
                     state = 'q13'
                 else:
                     self.check(tokens, 'O', '/')
-                    yield {'type': 'output', 'token': tokens['O']['/']}
+                    yield {'type': 'output', 'token': tokens['O']['/'], 'lexeme': '/'}
                     yield {'type': 'lexeme', 'token_class': 'O', 'lexeme': '/'}
                     state = 'S'
                     i -= 1

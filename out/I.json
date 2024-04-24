@@ -2,5 +2,11 @@
     "I1": "php",
     "I2": "x",
     "I3": "y",
-    "I4": "sum"
+    "I4": "sum",
+    "I5": "isPrime",
+    "I6": "num",
+    "I7": "i",
+    "I8": "sqrt",
+    "I9": "factorial",
+    "I10": "n"
 }

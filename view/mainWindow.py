@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QTextEdit, QPushButton,
                              QWidget, QGridLayout, QTableWidget, QTableWidgetItem)
 from models.lexical_analyzer import LexicalAnalyzer
 
+
 class PHPAnalyzerGUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -98,6 +99,8 @@ class PHPAnalyzerGUI(QMainWindow):
         # 3. Выводим последовательность токенов
         self.tokensEditor.setPlainText(output_sequence)
 
+        print(tokens)
+
         # 4. Выводим лексемы и их коды в таблицы
         for token_class, lexemes in tokens.items():
             if token_class == 'W':
@@ -136,18 +139,30 @@ class PHPAnalyzerGUI(QMainWindow):
         self.stopButton.setEnabled(True)
 
     def debugStep(self):
+        line = self.current_line
         try:
             event = next(self.debug_generator)
+            if event['type'] == 'lexeme':
+                print(event)
+                self.analyzer.check(self.tokens, event['token_class'], event['lexeme'])
+                while event['type'] == 'lexeme':
+                    event = next(self.debug_generator)
+                    print('>', event)
             if event['type'] == 'transition':
+                print(event)
+                if line != event['line']:
+                    self.output_sequence += '\n'
                 self.current_line = event['line']
                 self.current_pos = event['pos']
-            elif event['type'] == 'output':
+                while event['type'] == 'transition':
+                    event = next(self.debug_generator)
+                    print('>', event)
+            if event['type'] == 'output':
+                # self.tokens[event['token'][0]][event['token']] = event['lexeme']
                 self.output_sequence += event['token'] + ' '
-            elif event['type'] == 'lexeme':
-                self.analyzer.check(self.tokens, event['token_class'], event['lexeme'])
 
             self.highlightCurrentPosition()
-            self.updateDebugOutput()
+            self.updateDebugOutput(tokens=self.tokens)
 
         except StopIteration:
             self.stopDebug()
@@ -157,12 +172,28 @@ class PHPAnalyzerGUI(QMainWindow):
         # TODO: Подсветить текущую позицию в self.codeEditor
         pass
 
-    def updateDebugOutput(self):
+    def updateDebugOutput(self, tokens):
         self.tokensEditor.setPlainText(self.output_sequence)
 
-        for token_class, table in self.lexemeFields.items():
-            lexemes = self.tokens.get(token_class, {})
+        print(tokens)
+        for token_class, lexemes in tokens.items():
+            if token_class == 'W':
+                table = self.lexemeFields['Keywords']
+            elif token_class == 'I':
+                table = self.lexemeFields['Identifiers']
+            elif token_class == 'O':
+                table = self.lexemeFields['Operations']
+            elif token_class == 'R':
+                table = self.lexemeFields['Delimiters']
+            elif token_class == 'N':
+                table = self.lexemeFields['Numbers']
+            elif token_class == 'C':
+                table = self.lexemeFields['Strings']
+
             table.setRowCount(len(lexemes))
+            table.setColumnCount(2)
+            table.setHorizontalHeaderLabels(['Lexeme', 'Code'])
+
             for row, (lexeme, code) in enumerate(lexemes.items()):
                 table.setItem(row, 0, QTableWidgetItem(lexeme))
                 table.setItem(row, 1, QTableWidgetItem(code))
@@ -179,6 +210,7 @@ class PHPAnalyzerGUI(QMainWindow):
         for table in self.lexemeFields.values():
             table.clearContents()
             table.setRowCount(0)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

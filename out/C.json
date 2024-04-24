@@ -2,5 +2,11 @@
     "C1": "null",
     "C2": "true",
     "C3": "false",
-    "C4": "\"The sum is: \""
+    "C4": "\"The sum is: \"",
+    "C5": "\"\\nFunction calls:\\n\"",
+    "C6": "\"Factorial of $x: \"",
+    "C7": "\"\\n\"",
+    "C8": "\"Is $x prime? \"",
+    "C9": "'Yes'",
+    "C10": "'No'"
 }
